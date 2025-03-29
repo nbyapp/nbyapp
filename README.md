@@ -1,10 +1,11 @@
 # NBYApp - Generate Web Apps from Ideas
 
-NBYApp is a platform that transforms high-level ideas into complete web applications using AI. Simply describe your app concept, and NBYApp will generate a fully functional web application with multiple screens, modern UI/UX design, and all the necessary code.
+NBYApp is a platform that transforms high-level ideas into complete web applications using AI. Simply describe your app concept, choose your preferred LLM service, and NBYApp will generate a fully functional web application with multiple screens, modern UI/UX design, and all the necessary code.
 
 ## Features
 
 - **Idea-to-App Generation**: Transform text descriptions into complete web applications
+- **Multiple LLM Services**: Choose between OpenAI, Anthropic Claude, or DeepSeek Coder
 - **Multiple Screens**: Generated apps include 4-5 core screens with working navigation
 - **Modern Design**: Apple-inspired minimalist UI/UX design principles
 - **Code Preview**: View and edit generated HTML, CSS, and JavaScript code
@@ -41,6 +42,7 @@ npm run dev
 
 1. **Create an App**:
    - Navigate to the "Create App" page
+   - Select your preferred LLM service (OpenAI, Claude, or DeepSeek)
    - Enter your app idea in the text input
    - Click "Generate App"
    - Wait for the AI to process your request and generate the app
@@ -52,6 +54,7 @@ npm run dev
 
 3. **Manage Your Apps**:
    - Visit the "App Gallery" to see all your generated apps
+   - Each app shows which LLM service was used to generate it
    - Click on any app to view or edit it
    - Delete apps you no longer need
 
@@ -70,6 +73,16 @@ The AI follows best practices for modern web development, including:
 - Clean, production-ready code
 - Modern UI patterns (inspired by Apple's Human Interface Guidelines)
 
+## LLM Service Integration
+
+NBYApp supports multiple AI services for code generation:
+
+- **OpenAI GPT-4o**: A powerful and versatile model with strong coding capabilities
+- **Anthropic Claude 3 Opus**: Known for comprehensive and well-structured code generation
+- **DeepSeek Coder**: Specialized for programming tasks with clean code output
+
+In the current demo implementation, these services are simulated for demonstration purposes. In a production environment, you would need to configure API keys and implement the actual API calls to these services.
+
 ## Project Structure
 
 ```
@@ -77,7 +90,7 @@ nbyapp/
   ├── src/              # Application source code
   │   ├── components/   # Reusable React components
   │   ├── pages/        # Application pages
-  │   ├── utils/        # Utility functions
+  │   ├── utils/        # Utility functions and AI service integration
   │   └── App.jsx       # Main application component
   ├── userapps/         # Storage for user-generated applications
   └── public/           # Static assets
@@ -88,7 +101,7 @@ nbyapp/
 - **Frontend**: React.js with React Router
 - **Styling**: Tailwind CSS
 - **Code Editor**: CodeMirror
-- **AI Integration**: Ready for integration with OpenAI, Anthropic, or similar AI services
+- **AI Integration**: Ready for integration with OpenAI, Anthropic Claude, and DeepSeek Coder
 - **Deployment**: Deployed on GitHub Pages (or any static hosting service)
 
 ## Contributing
