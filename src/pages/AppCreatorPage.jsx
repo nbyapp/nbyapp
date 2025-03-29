@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { generateAIPrompt, callAIService } from '../utils/aiPrompt';
+import { generateAIPrompt } from '../utils/aiPrompt';
+import { LLM_SERVICES, callLLMService } from '../utils/llmServices';
 
 function AppCreatorPage() {
   const [appIdea, setAppIdea] = useState('');
+  const [selectedLLM, setSelectedLLM] = useState('openai'); // Default to OpenAI
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  // Generate the app using AI
+  // Generate the app using the selected LLM service
   const generateApp = async () => {
     if (!appIdea.trim()) {
       setError('Please enter an app idea');
@@ -19,17 +21,13 @@ function AppCreatorPage() {
     setIsGenerating(true);
     
     try {
-      // Generate the AI prompt
-      const prompt = generateAIPrompt(appIdea);
-      
-      // Call the AI service - in a real implementation, this would
-      // communicate with an actual AI API
-      await callAIService(prompt);
+      // Call the selected LLM service
+      await callLLMService(selectedLLM, appIdea);
       
       // Generate a unique ID for the app
       const appId = 'app_' + Date.now();
       
-      // In a real implementation, we would parse the AI response
+      // In a real implementation, we would parse the LLM response
       // and extract the generated files
       
       // For demo purposes, we'll store a minimal app structure in localStorage
@@ -37,6 +35,7 @@ function AppCreatorPage() {
         id: appId,
         name: `App from "${appIdea.substring(0, 30)}${appIdea.length > 30 ? '...' : ''}"`,
         idea: appIdea,
+        llmService: selectedLLM,
         createdAt: new Date().toISOString(),
         files: [
           { 
@@ -73,6 +72,9 @@ function AppCreatorPage() {
     }
   };
   
+  // Find the selected LLM service details
+  const selectedLLMDetails = LLM_SERVICES.find(service => service.id === selectedLLM);
+  
   // Mock content generation functions - these would be replaced with actual AI-generated content
   const createMockHTMLContent = (idea) => {
     return `<!DOCTYPE html>
@@ -100,6 +102,7 @@ function AppCreatorPage() {
         <section class="hero">
             <h1>Welcome to Your App</h1>
             <p>Based on your idea: "${idea}"</p>
+            <p>Generated with: ${selectedLLMDetails.name}</p>
             <button class="btn primary">Get Started</button>
         </section>
         
@@ -352,6 +355,35 @@ document.addEventListener('DOMContentLoaded', function() {
 
       <div className="max-w-3xl mx-auto">
         <div className="card bg-white p-6 shadow-md rounded-lg">
+          <div className="mb-5">
+            <label htmlFor="llm-selector" className="block text-sm font-medium text-gray-700 mb-2">
+              Select AI Service
+            </label>
+            <div className="relative">
+              <select
+                id="llm-selector"
+                name="llm-selector"
+                className="input w-full py-2 pl-3 pr-10 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 rounded-md"
+                value={selectedLLM}
+                onChange={(e) => setSelectedLLM(e.target.value)}
+              >
+                {LLM_SERVICES.map((service) => (
+                  <option key={service.id} value={service.id}>
+                    {service.icon} {service.name}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </div>
+            </div>
+            <p className="mt-2 text-sm text-gray-500">
+              Choose the AI service that will generate your application
+            </p>
+          </div>
+
           <div className="mb-4">
             <label htmlFor="appIdea" className="block text-sm font-medium text-gray-700 mb-2">
               Describe your app idea
@@ -385,7 +417,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Generating App...
+                  Generating App with {selectedLLMDetails?.name}...
                 </span>
               ) : (
                 "Generate App"
