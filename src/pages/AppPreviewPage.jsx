@@ -4,6 +4,7 @@ import CodeMirror from '@uiw/react-codemirror';
 import { javascript } from '@codemirror/lang-javascript';
 import { html } from '@codemirror/lang-html';
 import { css } from '@codemirror/lang-css';
+import { LLM_SERVICES } from '../utils/llmServices';
 
 function AppPreviewPage() {
   const { appId } = useParams();
@@ -91,6 +92,11 @@ function AppPreviewPage() {
     setIframeKey(prevKey => prevKey + 1);
   };
 
+  // Get LLM service details
+  const getLLMServiceDetails = (serviceId) => {
+    return LLM_SERVICES.find(service => service.id === serviceId) || { name: 'Unknown Service', icon: '🤖' };
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -117,6 +123,11 @@ function AppPreviewPage() {
     );
   }
 
+  // Get LLM service information
+  const llmService = app.llmService
+    ? getLLMServiceDetails(app.llmService)
+    : { name: 'AI Service', icon: '🤖' };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* App header */}
@@ -124,7 +135,13 @@ function AppPreviewPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{app.name}</h1>
+              <div className="flex items-center">
+                <h1 className="text-2xl font-bold text-gray-900">{app.name}</h1>
+                <div className="ml-3 flex items-center space-x-1 bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs">
+                  <span>{llmService.icon}</span>
+                  <span>{llmService.name}</span>
+                </div>
+              </div>
               <p className="mt-1 text-sm text-gray-500 max-w-2xl line-clamp-2">{app.idea}</p>
             </div>
             <div className="mt-4 md:mt-0 flex space-x-4">
