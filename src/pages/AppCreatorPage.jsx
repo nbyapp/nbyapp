@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { generateAIPrompt, callAIService } from '../utils/aiPrompt';
 
 function AppCreatorPage() {
   const [appIdea, setAppIdea] = useState('');
@@ -7,7 +8,7 @@ function AppCreatorPage() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  // This would normally call an API endpoint to generate the app
+  // Generate the app using AI
   const generateApp = async () => {
     if (!appIdea.trim()) {
       setError('Please enter an app idea');
@@ -18,19 +19,18 @@ function AppCreatorPage() {
     setIsGenerating(true);
     
     try {
-      // This is a mock implementation - in a real app, this would call an AI service
-      // and process the response to generate files for the app
+      // Generate the AI prompt
+      const prompt = generateAIPrompt(appIdea);
       
-      // Simulate API call with timeout
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Call the AI service - in a real implementation, this would
+      // communicate with an actual AI API
+      await callAIService(prompt);
       
       // Generate a unique ID for the app
       const appId = 'app_' + Date.now();
       
-      // In a real implementation, we would:
-      // 1. Call the AI service with our prompt
-      // 2. Process the response to extract code for different files
-      // 3. Save these files to storage (could be local, a database, or file storage)
+      // In a real implementation, we would parse the AI response
+      // and extract the generated files
       
       // For demo purposes, we'll store a minimal app structure in localStorage
       const generatedApp = {
