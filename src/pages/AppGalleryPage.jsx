@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { LLM_SERVICES } from '../utils/llmServices';
 
 function AppGalleryPage() {
   const [apps, setApps] = useState([]);
@@ -43,6 +44,11 @@ function AppGalleryPage() {
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
+  // Get LLM service details by ID
+  const getLLMServiceDetails = (serviceId) => {
+    return LLM_SERVICES.find(service => service.id === serviceId) || { name: 'Unknown Service', icon: '🤖' };
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="text-center mb-10">
@@ -76,36 +82,49 @@ function AppGalleryPage() {
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {apps.map((app) => (
-                <Link
-                  key={app.id}
-                  to={`/preview/${app.id}`}
-                  className="card bg-white hover:shadow-lg transition-shadow duration-200"
-                >
-                  <div className="p-6">
-                    <div className="flex justify-between items-start">
-                      <h2 className="text-xl font-semibold text-gray-900 truncate">{app.name}</h2>
-                      <button
-                        onClick={(e) => deleteApp(app.id, e)}
-                        className="text-gray-400 hover:text-red-500"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                    </div>
-                    <p className="mt-2 text-sm text-gray-600 line-clamp-2">{app.idea}</p>
-                    <div className="mt-4 flex justify-between items-center">
-                      <div className="text-xs text-gray-500">
-                        Created: {formatDate(app.createdAt)}
+              {apps.map((app) => {
+                // Get LLM service details
+                const llmService = app.llmService 
+                  ? getLLMServiceDetails(app.llmService)
+                  : { name: 'AI Service', icon: '🤖' };
+                
+                return (
+                  <Link
+                    key={app.id}
+                    to={`/preview/${app.id}`}
+                    className="card bg-white hover:shadow-lg transition-shadow duration-200"
+                  >
+                    <div className="p-6">
+                      <div className="flex justify-between items-start">
+                        <h2 className="text-xl font-semibold text-gray-900 truncate">{app.name}</h2>
+                        <button
+                          onClick={(e) => deleteApp(app.id, e)}
+                          className="text-gray-400 hover:text-red-500"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </button>
                       </div>
-                      <div className="text-xs bg-primary-100 text-primary-800 px-2 py-1 rounded-full">
-                        {app.files.length} files
+                      <p className="mt-2 text-sm text-gray-600 line-clamp-2">{app.idea}</p>
+                      <div className="mt-4 flex justify-between items-center">
+                        <div className="text-xs text-gray-500">
+                          Created: {formatDate(app.createdAt)}
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className="text-xs bg-primary-100 text-primary-800 px-2 py-1 rounded-full">
+                            {app.files.length} files
+                          </div>
+                          <div className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full flex items-center">
+                            <span className="mr-1">{llmService.icon}</span>
+                            {llmService.name.split(' ')[0]}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>
