@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { LLM_SERVICES } from '../utils/llmServices';
+import { deleteApp as deleteAppFromStorage, getAllApps } from '../utils/fileSystem';
 
 function AppGalleryPage() {
   const [apps, setApps] = useState([]);
@@ -10,7 +11,7 @@ function AppGalleryPage() {
     // Load apps from localStorage
     const loadApps = () => {
       try {
-        const savedApps = JSON.parse(localStorage.getItem('nbyApps') || '[]');
+        const savedApps = getAllApps(); // Using the function from fileSystem.js
         setApps(savedApps.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
       } catch (error) {
         console.error('Error loading apps:', error);
@@ -29,9 +30,12 @@ function AppGalleryPage() {
     
     if (window.confirm('Are you sure you want to delete this app?')) {
       try {
-        const updatedApps = apps.filter(app => app.id !== appId);
-        localStorage.setItem('nbyApps', JSON.stringify(updatedApps));
-        setApps(updatedApps);
+        // Use the deleteApp function from fileSystem.js
+        const deleted = deleteAppFromStorage(appId);
+        if (deleted) {
+          // Update the state to reflect the deletion
+          setApps(apps.filter(app => app.id !== appId));
+        }
       } catch (error) {
         console.error('Error deleting app:', error);
       }
@@ -40,8 +44,13 @@ function AppGalleryPage() {
 
   // Format date to readable format
   const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
+    try {
+      const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+      return new Date(dateString).toLocaleDateString(undefined, options);
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Unknown date';
+    }
   };
 
   // Get LLM service details by ID
@@ -88,6 +97,12 @@ function AppGalleryPage() {
                   ? getLLMServiceDetails(app.llmService)
                   : { name: 'AI Service', icon: '🤖' };
                 
+                // Get display name for service - prefer stored serviceName
+                const serviceName = app.serviceName || llmService.name;
+                
+                // Get model name (if available)
+                const modelName = app.modelName || app.llmModel || '';
+                
                 return (
                   <Link
                     key={app.id}
@@ -117,7 +132,10 @@ function AppGalleryPage() {
                           </div>
                           <div className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full flex items-center">
                             <span className="mr-1">{llmService.icon}</span>
-                            {llmService.name.split(' ')[0]}
+                            <span>
+                              {serviceName.split(' ')[0]}
+                              {modelName && <span className="opacity-75 text-xs"> ({modelName.split('-')[0]})</span>}
+                            </span>
                           </div>
                         </div>
                       </div>
