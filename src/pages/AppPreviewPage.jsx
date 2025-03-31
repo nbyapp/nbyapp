@@ -92,7 +92,7 @@ function AppPreviewPage() {
     setIframeKey(prevKey => prevKey + 1);
   };
 
-  // Get LLM service details
+  // Get LLM service details by ID
   const getLLMServiceDetails = (serviceId) => {
     return LLM_SERVICES.find(service => service.id === serviceId) || { name: 'Unknown Service', icon: '🤖' };
   };
@@ -123,10 +123,16 @@ function AppPreviewPage() {
     );
   }
 
-  // Get LLM service information
-  const llmService = app.llmService
-    ? getLLMServiceDetails(app.llmService)
-    : { name: 'AI Service', icon: '🤖' };
+  // Get the service name - either from stored serviceName, or from the LLM_SERVICES array
+  const serviceName = app.serviceName || 
+    (app.llmService ? getLLMServiceDetails(app.llmService).name : 'AI Service');
+  
+  // Get the model name - either from stored modelName, or from llmModel field
+  const modelName = app.modelName || app.llmModel || '';
+  
+  // Get the service icon
+  const serviceIcon = app.llmService ? 
+    getLLMServiceDetails(app.llmService).icon : '🤖';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -138,8 +144,8 @@ function AppPreviewPage() {
               <div className="flex items-center">
                 <h1 className="text-2xl font-bold text-gray-900">{app.name}</h1>
                 <div className="ml-3 flex items-center space-x-1 bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs">
-                  <span>{llmService.icon}</span>
-                  <span>{llmService.name}</span>
+                  <span>{serviceIcon}</span>
+                  <span>{serviceName} {modelName ? `(${modelName})` : ''}</span>
                 </div>
               </div>
               <p className="mt-1 text-sm text-gray-500 max-w-2xl line-clamp-2">{app.idea}</p>
