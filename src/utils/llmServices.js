@@ -48,13 +48,25 @@ export const LLM_SERVICES = [
   }
 ];
 
-// Get API key from localStorage
+// Get API key from environment variables
 const getApiKey = (service) => {
-  const keys = JSON.parse(localStorage.getItem('nbyapp_api_keys') || '{}');
-  const key = keys[service];
+  // Check if we should use mock implementations
+  if (import.meta.env.VITE_USE_MOCK_IMPLEMENTATIONS === 'true') {
+    console.log('Using mock implementations as specified in .env.local');
+    throw new Error('Using mock implementations');
+  }
+  
+  // For development, get API key from environment variables
+  const keyMap = {
+    'openai': import.meta.env.VITE_OPENAI_API_KEY,
+    'anthropic': import.meta.env.VITE_ANTHROPIC_API_KEY,
+    'deepseek': import.meta.env.VITE_DEEPSEEK_API_KEY
+  };
+  
+  const key = keyMap[service];
   
   if (!key) {
-    throw new Error(`No API key found for ${service}. Please add your API key in the settings.`);
+    throw new Error(`No API key found for ${service}. Please check your .env.local file.`);
   }
   
   return key;
@@ -92,6 +104,12 @@ export const callLLMService = async (serviceId, appIdea, modelId = null) => {
   addGenerationStep(`Preparing prompt for ${service.name} (${model.name})`);
   
   try {
+    // Check if we should use mock implementations
+    if (import.meta.env.VITE_USE_MOCK_IMPLEMENTATIONS === 'true') {
+      addGenerationStep('Using mock implementation (as specified in .env.local)');
+      return await mockLLMCall(serviceId, appIdea, model.name);
+    }
+    
     addGenerationStep(`Sending request to ${service.name} API`);
     updateGenerationProgress(10);
     
@@ -152,6 +170,13 @@ export const callLLMService = async (serviceId, appIdea, modelId = null) => {
     return response;
   } catch (error) {
     console.error(`Error calling ${serviceId}:`, error);
+    
+    // Check if the error is about using mock implementations
+    if (error.message === 'Using mock implementations') {
+      addGenerationStep('Using mock implementation instead of API call');
+      return await mockLLMCall(serviceId, appIdea, model.name);
+    }
+    
     setGenerationError(error);
     throw error; // Re-throw to be handled by the caller
   }
@@ -405,3 +430,256 @@ const extractFilesFromContent = (content) => {
   
   return files;
 };
+
+// Mock implementation for development and fallback
+const mockLLMCall = async (serviceId, appIdea, modelName = '') => {
+  const serviceName = LLM_SERVICES.find(s => s.id === serviceId)?.name || serviceId;
+  
+  // Simulate API delay
+  addGenerationStep('Generating app components...');
+  updateGenerationProgress(20);
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  addGenerationStep('Creating HTML structure...');
+  updateGenerationProgress(40);
+  await new Promise(resolve => setTimeout(resolve, 800));
+  
+  addGenerationStep('Styling components with CSS...');
+  updateGenerationProgress(60);
+  await new Promise(resolve => setTimeout(resolve, 800));
+  
+  addGenerationStep('Implementing JavaScript functionality...');
+  updateGenerationProgress(80);
+  await new Promise(resolve => setTimeout(resolve, 800));
+  
+  // Create mock files
+  const mockFiles = [
+    { name: 'index.html', content: createMockHTMLContent(serviceId, appIdea, modelName), type: 'html' },
+    { name: 'styles.css', content: createMockCSSContent(), type: 'css' },
+    { name: 'app.js', content: createMockJSContent(), type: 'javascript' }
+  ];
+  
+  // Generate unique ID and create metadata
+  const appId = 'app_' + Date.now();
+  const metadata = {
+    name: `App from "${appIdea.substring(0, 30)}${appIdea.length > 30 ? '...' : ''}"`,
+    idea: appIdea,
+    llmService: serviceId,
+    llmModel: modelName,
+    serviceName: serviceName,
+    modelName: modelName
+  };
+  
+  // Save files to storage and potentially to disk
+  await saveAppFiles(appId, mockFiles, metadata);
+  
+  // Track files individually
+  mockFiles.forEach(file => {
+    addGeneratedFile(file);
+  });
+  
+  // Add appId to the generation status for navigation
+  generationStatus.updateStatus({ appId });
+  
+  addGenerationStep('Finalizing app generation...');
+  updateGenerationProgress(100);
+  completeGeneration();
+  
+  return {
+    success: true,
+    message: `App generated successfully with ${serviceName} (${modelName || 'default'})`,
+    service: serviceId,
+    files: mockFiles
+  };
+};
+
+// Mock content creation functions for fallback
+const createMockHTMLContent = (serviceId, appIdea, modelName = '') => {
+  const serviceName = LLM_SERVICES.find(s => s.id === serviceId)?.name || serviceId;
+  
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generated App (Mock)</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">MockApp</div>
+            <ul>
+                <li><a href="#" class="active">Home</a></li>
+                <li><a href="#">Features</a></li>
+                <li><a href="#">About</a></li>
+                <li><a href="#">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <main>
+        <section class="hero">
+            <h1>Welcome to Your Mock App</h1>
+            <p>App Idea: "${appIdea || 'No app idea provided'}"</p>
+            <p>This is a mock app because real API integration is disabled or no API key was provided.</p>
+            <p>Generated with: ${serviceName} ${modelName ? `(${modelName})` : ''}</p>
+            <button class="btn primary">Get Started</button>
+        </section>
+        
+        <section class="features">
+            <h2>Features</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>Feature 1</h3>
+                    <p>Description of this amazing feature</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Feature 2</h3>
+                    <p>Description of this amazing feature</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Feature 3</h3>
+                    <p>Description of this amazing feature</p>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer>
+        <p>&copy; 2025 Mock App. All rights reserved.</p>
+    </footer>
+    
+    <script src="app.js"></script>
+</body>
+</html>`;
+};
+
+const createMockCSSContent = () => {
+  return `/* Basic Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    line-height: 1.6;
+    color: #333;
+}
+
+/* Navigation */
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #0070f3;
+}
+
+nav ul {
+    display: flex;
+    list-style: none;
+}
+
+nav ul li {
+    margin-left: 2rem;
+}
+
+nav ul li a {
+    text-decoration: none;
+    color: #666;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+nav ul li a:hover, nav ul li a.active {
+    color: #0070f3;
+}
+
+/* Hero Section */
+.hero {
+    padding: 6rem 2rem;
+    text-align: center;
+    background-color: #f9fafb;
+}
+
+.hero h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #111;
+}
+
+.hero p {
+    font-size: 1.25rem;
+    max-width: 800px;
+    margin: 0 auto 2rem;
+    color: #666;
+}
+
+/* Buttons */
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    font-size: 1rem;
+}
+
+.primary {
+    background-color: #0070f3;
+    color: white;
+}
+
+.primary:hover {
+    background-color: #005dd1;
+}`;
+};
+
+const createMockJSContent = () => {
+  return `// Simple app initialization
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('Mock App initialized');
+  
+  // Get all navigation links
+  const navLinks = document.querySelectorAll('nav ul li a');
+  
+  // Add click event listeners to nav links
+  navLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      
+      // Remove active class from all links
+      navLinks.forEach(l => l.classList.remove('active'));
+      
+      // Add active class to clicked link
+      link.classList.add('active');
+      
+      // In a real app, we would handle navigation here
+      console.log('Navigating to:', link.textContent);
+    });
+  });
+  
+  // Get the primary button
+  const primaryButton = document.querySelector('.btn.primary');
+  
+  // Add click event listener to primary button
+  if (primaryButton) {
+    primaryButton.addEventListener('click', () => {
+      console.log('Primary button clicked');
+      alert('This is a mock app! In a real implementation, this would trigger an action.');
+    });
+  }
+});`;
