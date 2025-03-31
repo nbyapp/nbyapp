@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { callLLMService, LLM_SERVICES } from '../utils/llmServices';
 import { generationStatus } from '../utils/generationStatus';
 import GenerationStatusBar from '../components/GenerationStatusBar';
-import ApiSettings from '../components/ApiSettings';
 
 function AppCreatorPage() {
   const [appIdea, setAppIdea] = useState('');
@@ -11,7 +10,6 @@ function AppCreatorPage() {
   const [selectedModel, setSelectedModel] = useState(''); // Will be set based on default model
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
-  const [isApiSettingsOpen, setIsApiSettingsOpen] = useState(false);
   const navigate = useNavigate();
   
   // Set default model when LLM service changes
@@ -31,13 +29,6 @@ function AppCreatorPage() {
       
       if (status.error) {
         setError(status.error.message || 'An error occurred during generation');
-        
-        // If the error is related to API keys, offer to open API settings
-        if (status.error.message && status.error.message.includes('API key')) {
-          setError(
-            `${status.error.message} Would you like to set up your API keys now?`
-          );
-        }
       }
       
       // If generation completed and there's an appId, navigate to it
@@ -49,12 +40,6 @@ function AppCreatorPage() {
     return () => unsubscribe();
   }, [navigate]);
 
-  // Check if API key is present for the selected LLM service
-  const checkApiKey = () => {
-    const keys = JSON.parse(localStorage.getItem('nbyapp_api_keys') || '{}');
-    return !!keys[selectedLLM];
-  };
-
   // Generate the app using the selected LLM service and model
   const generateApp = async () => {
     if (!appIdea.trim()) {
@@ -62,20 +47,14 @@ function AppCreatorPage() {
       return;
     }
 
-    if (!checkApiKey()) {
-      setError(`No API key found for ${selectedLLM}. Please add your API key to continue.`);
-      return;
-    }
-
     setError('');
     
     try {
       // Call the selected LLM service with the selected model
-      // This will now handle its own status updates
       await callLLMService(selectedLLM, appIdea, selectedModel);
     } catch (err) {
       console.error('Error generating app:', err);
-      // The error is already handled by the generation status subscription
+      // Error is handled by the generationStatus subscription
     }
   };
   
@@ -177,12 +156,10 @@ function AppCreatorPage() {
             <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md">
               <p>{error}</p>
               {error.includes('API key') && (
-                <button
-                  onClick={() => setIsApiSettingsOpen(true)}
-                  className="mt-2 text-sm font-medium text-red-700 underline"
-                >
-                  Open API Settings
-                </button>
+                <p className="mt-2 text-sm">
+                  Make sure you've set the API key in your .env.local file for {selectedLLM === 'claude' ? 'VITE_ANTHROPIC_API_KEY' : 
+                    selectedLLM === 'openai' ? 'VITE_OPENAI_API_KEY' : 'VITE_DEEPSEEK_API_KEY'}.
+                </p>
               )}
             </div>
           )}
@@ -241,9 +218,6 @@ function AppCreatorPage() {
       
       {/* Generation Status Bar */}
       <GenerationStatusBar />
-      
-      {/* API Settings Modal */}
-      <ApiSettings isOpen={isApiSettingsOpen} onClose={() => setIsApiSettingsOpen(false)} />
     </div>
   );
 }
