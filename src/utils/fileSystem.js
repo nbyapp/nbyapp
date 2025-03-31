@@ -21,6 +21,8 @@ export const saveAppFiles = async (appId, files, metadata = {}) => {
     idea: metadata.idea || '',
     llmService: metadata.llmService || '',
     llmModel: metadata.llmModel || '',
+    serviceName: metadata.serviceName || '',
+    modelName: metadata.modelName || '',
     createdAt: timestamp,
     files: files
   };
@@ -42,76 +44,10 @@ export const saveAppFiles = async (appId, files, metadata = {}) => {
     addGenerationStep('Failed to save to browser storage', 'error');
   }
   
-  // For server implementation, save to disk
-  if (typeof window === 'undefined' || typeof fetch !== 'undefined') {
-    try {
-      // In a real server implementation, this is where you would:
-      // 1. Create the directory for the app
-      // 2. Write each file to disk
-      // 3. Optionally commit to git
-
-      // For now, we'll simulate a server call to demonstrate how it would work
-      addGenerationStep('Saving files to disk (simulated)');
-      
-      // Simulate API call to save files
-      const saveResult = await simulateSaveFilesToDisk(appId, files);
-      
-      if (saveResult.success) {
-        addGenerationStep(`Files saved to disk at ${saveResult.path}`, 'success');
-      } else {
-        addGenerationStep(`Failed to save files to disk: ${saveResult.error}`, 'error');
-      }
-    } catch (error) {
-      console.error('Error saving files to disk:', error);
-      addGenerationStep('Failed to save files to disk', 'error');
-    }
-  }
+  // For now we skip any server-side saving to disk
+  // In a production implementation, this would save files to server
   
   return generatedApp;
-};
-
-/**
- * Simulate saving files to disk (in a real implementation, this would actually write files)
- * @param {string} appId - The app ID
- * @param {Array} files - The files to save
- * @returns {Object} - The result of the save operation
- */
-const simulateSaveFilesToDisk = async (appId, files) => {
-  try {
-    addGenerationStep('Saving files to disk via API');
-    
-    // Call our backend API to save the files
-    const response = await fetch('http://localhost:3001/api/save-files', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ appId, files })
-    });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to save files');
-    }
-    
-    const result = await response.json();
-    
-    // Log the files that were created
-    if (result.files && result.files.length > 0) {
-      result.files.forEach(fileName => {
-        console.log(`Created: /userapps/${appId}/${fileName}`);
-      });
-    }
-    
-    return result;
-  } catch (error) {
-    console.error('Error saving files to disk:', error);
-    return {
-      success: false,
-      error: error.message,
-      fallback: 'Using browser storage only'
-    };
-  }
 };
 
 /**
@@ -147,4 +83,4 @@ export const deleteApp = (appId) => {
   
   localStorage.setItem('nbyApps', JSON.stringify(newApps));
   return true;
-}; 
+};
