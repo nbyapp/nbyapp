@@ -1,7 +1,5 @@
 /**
  * This file contains the implementation for different LLM services
- * In a production environment, you would need to set up proper API keys
- * and authentication for each service.
  */
 
 import { generateAIPrompt } from './aiPrompt';
@@ -49,6 +47,18 @@ export const LLM_SERVICES = [
     ]
   }
 ];
+
+// Get API key from localStorage
+const getApiKey = (service) => {
+  const keys = JSON.parse(localStorage.getItem('nbyapp_api_keys') || '{}');
+  const key = keys[service];
+  
+  if (!key) {
+    throw new Error(`No API key found for ${service}. Please add your API key in the settings.`);
+  }
+  
+  return key;
+};
 
 /**
  * Call the appropriate LLM service based on the selected option
@@ -150,12 +160,14 @@ export const callLLMService = async (serviceId, appIdea, modelId = null) => {
 // OpenAI API call implementation
 const callOpenAI = async (prompt, model = 'gpt-4o') => {
   try {
+    const apiKey = getApiKey('openai');
     addGenerationStep('Sending request to OpenAI API');
     
     const response = await fetch('/api/openai/chat/completions', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
         model: model,
@@ -204,12 +216,15 @@ const processOpenAIResponse = (data) => {
 // Claude API call implementation
 const callClaude = async (prompt, model = 'claude-3-opus-20240229') => {
   try {
+    const apiKey = getApiKey('anthropic');
     addGenerationStep('Sending request to Claude API');
     
     const response = await fetch('/api/anthropic/messages', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
         model: model,
@@ -256,12 +271,14 @@ const processClaudeResponse = (data) => {
 // DeepSeek API call implementation
 const callDeepSeek = async (prompt, model = 'deepseek-coder-33b-instruct') => {
   try {
+    const apiKey = getApiKey('deepseek');
     addGenerationStep('Sending request to DeepSeek API');
     
     const response = await fetch('/api/deepseek/chat/completions', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
         model: model,
