@@ -1,4 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
+import GenerationStatusBar from './GenerationStatusBar';
 
 function Layout() {
   const location = useLocation();
@@ -56,6 +57,9 @@ function Layout() {
           </p>
         </div>
       </footer>
+
+      {/* Global Generation Status Bar */}
+      <GenerationStatusBar />
     </div>
   );
 }

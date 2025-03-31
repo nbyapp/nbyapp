@@ -31,12 +31,38 @@ cd nbyapp
 npm install
 ```
 
-3. Start the development server:
+3. Set up your environment variables:
+   - Copy the `.env.local.example` file to `.env.local`:
+   ```bash
+   cp .env.local.example .env.local
+   ```
+   - Edit `.env.local` and add your API keys
+   - Set `VITE_USE_MOCK_IMPLEMENTATIONS=false` to use real API calls
+   - If you don't have API keys, leave `VITE_USE_MOCK_IMPLEMENTATIONS=true` to use mock implementations
+
+4. Start the development server:
 ```bash
 npm run dev
 ```
 
-4. Visit `http://localhost:3000` in your browser to use the application.
+5. Visit `http://localhost:3000` in your browser to use the application.
+
+## API Keys
+
+NBYApp can connect to the following LLM services:
+
+1. **OpenAI API** - Get your API key from [OpenAI's platform](https://platform.openai.com/api-keys)
+2. **Anthropic Claude API** - Get your API key from [Anthropic's console](https://console.anthropic.com/)
+3. **DeepSeek API** - Get your API key from [DeepSeek's platform](https://platform.deepseek.com/)
+
+Set these keys in your `.env.local` file to enable real LLM integration:
+
+```
+VITE_OPENAI_API_KEY=your_key_here
+VITE_ANTHROPIC_API_KEY=your_key_here
+VITE_DEEPSEEK_API_KEY=your_key_here
+VITE_USE_MOCK_IMPLEMENTATIONS=false
+```
 
 ## Usage
 
